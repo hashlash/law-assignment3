@@ -20,10 +20,14 @@ Progress: <strong id="percentage">0%</strong>
         };
         const onError = function() {
             console.log('error');
+            document.getElementById('percentage').innerHTML = "ERROR! Cannot retrieve progress";
         };
         const onMessage = function(m) {
             console.log('message received');
             document.getElementById('percentage').innerHTML = m.body;
+            if (m.body === '100%') {
+                client.disconnect()
+            }
         };
 
         client.connect('0806444524', '0806444524', onConnect, onError, '/0806444524');
