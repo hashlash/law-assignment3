@@ -12,11 +12,11 @@ Progress: <strong id="percentage">0%</strong>
     if ("WebSocket" in window) {
         const ws = new SockJS( 'http://152.118.148.95:15674/stomp');
         const client = Stomp.over(ws);
-        const q = "/exchange/1606895884/dummyRouting";
+        const q = "/exchange/1606895884/{{.routingKey}}";
 
         const onConnect = function() {
             console.log('connected');
-            client.subscribe(q, onMessage);
+            client.subscribe(q, onMessage, {ack: 'client'});
         };
         const onError = function() {
             console.log('error');
@@ -25,8 +25,9 @@ Progress: <strong id="percentage">0%</strong>
         const onMessage = function(m) {
             console.log('message received');
             document.getElementById('percentage').innerHTML = m.body;
+            m.ack();
             if (m.body === '100%') {
-                client.disconnect()
+                client.disconnect();
             }
         };
 

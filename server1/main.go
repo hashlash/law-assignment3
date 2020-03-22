@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -12,25 +14,40 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
+	routingKey := uuid.New()
+
 	client := &http.Client{}
 	url := "http://" + os.Getenv("SERVER2_HOST")
 
 	req, err := http.NewRequest("POST", url, r.Body)
 	if err != nil {
-		log.Println("Failed to create request object", err)
+		log.Println("Failed to create request object:", err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}
+	req.Header.Add("X-ROUTING-KEY", routingKey.String())
+	req.Header.Add("Content-Type", r.Header.Get("Content-Type"))
+	req.Header.Add("Content-Length", r.Header.Get("Content-Length"))
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("Failed to do the request", err)
+		log.Println("Failed to do the request:", err)
 		http.Error(w, "Error", http.StatusInternalServerError)
 		return
 	}
 	fmt.Println(resp)
 
-	http.ServeFile(w, r, "./pages/progress.html")
+	tmpl, err := template.ParseFiles("./pages/progress.html")
+	if err != nil {
+		log.Println("Failed to parse html file:", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+	}
+
+	err = tmpl.Execute(w, map[string]string {"routingKey": routingKey.String()})
+	if err != nil {
+		log.Println("Failed to execute template:", err)
+		http.Error(w, "Error", http.StatusInternalServerError)
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
