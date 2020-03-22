@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -11,7 +10,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r)
+	http.ServeFile(w, r, "./pages/progress.html")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

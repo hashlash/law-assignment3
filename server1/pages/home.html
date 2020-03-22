@@ -3,37 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Upload Service</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
 <form action="/" method="POST">
     <input type="file" name="file">
+    <input type="submit" value="Submit">
 </form>
-<div id="info"></div>
-<script>
-    if ("WebSocket" in window) {
-        const ws = new SockJS( 'http://152.118.148.95:15674/stomp');
-        const client = Stomp.over(ws);
-        const q = "/exchange/1606895884/dummyRouting";
-
-        const onConnect = function() {
-            console.log('connected');
-            client.subscribe(q, onMessage);
-        };
-        const onError = function() {
-            console.log('error');
-        };
-        const onMessage = function(m) {
-            console.log('message received');
-            document.getElementById('info').innerHTML = m.body;
-        };
-
-        client.connect('0806444524', '0806444524', onConnect, onError, '/0806444524');
-    } else {
-        // The browser doesn't support WebSocket
-        alert("WebSocket NOT supported by your Browser!");
-    }
-</script>
 </body>
 </html>
