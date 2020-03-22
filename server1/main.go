@@ -26,7 +26,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func setupRoutes() {
 	http.HandleFunc("/", handler)
-	http.Handle("/static/", http.FileServer(http.Dir("./static")))
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
 
