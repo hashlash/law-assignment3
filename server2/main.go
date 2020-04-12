@@ -117,6 +117,7 @@ func setupRoutes() {
 }
 
 func main() {
+	log.Println("Serving on:", os.Getenv("SERVER2_HOST"))
 	setupRoutes()
 	log.Fatal(http.ListenAndServe(os.Getenv("SERVER2_HOST"), nil))
 }
