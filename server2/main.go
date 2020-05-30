@@ -10,11 +10,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"time"
 )
 
 func rmqSend(file multipart.File, routingKey string) {
-	time.Sleep(3 * time.Second)
 	conn, err := amqp.Dial(os.Getenv("AMQP_URL"))
 	if err != nil {
 		log.Println("Failed to connect to RabbitMQ:", err)
@@ -28,6 +26,9 @@ func rmqSend(file multipart.File, routingKey string) {
 		return
 	}
 	defer ch.Close()
+
+	rCh := make(chan amqp.Return)
+	ch.NotifyReturn(rCh)
 
 	err = ch.ExchangeDeclare(
 		os.Getenv("NPM_MAHASISWA"),
@@ -86,7 +87,7 @@ func rmqSend(file multipart.File, routingKey string) {
 		err = ch.Publish(
 			os.Getenv("NPM_MAHASISWA"), // name
 			routingKey,
-			false,
+			part == 10,
 			false,
 			msg,
 		)
@@ -96,6 +97,39 @@ func rmqSend(file multipart.File, routingKey string) {
 		}
 
 		part += 1
+	}
+
+	for r := range rCh {
+		log.Println("Failed to publish:", r)
+		log.Println("Retrying")
+
+		msg := amqp.Publishing{
+			Headers:         r.Headers,
+			ContentType:     r.ContentType,
+			ContentEncoding: r.ContentEncoding,
+			DeliveryMode:    r.DeliveryMode,
+			Priority:        r.Priority,
+			CorrelationId:   r.CorrelationId,
+			ReplyTo:         r.ReplyTo,
+			Expiration:      r.Expiration,
+			MessageId:       r.MessageId,
+			Timestamp:       r.Timestamp,
+			Type:            r.Type,
+			UserId:          r.UserId,
+			AppId:           r.AppId,
+			Body:            r.Body,
+		}
+
+		err = ch.Publish(
+			r.Exchange,
+			r.RoutingKey,
+			true,
+			false,
+			msg,
+		)
+		if err != nil {
+			log.Println("Failed to publish:", err)
+		}
 	}
 }
 
